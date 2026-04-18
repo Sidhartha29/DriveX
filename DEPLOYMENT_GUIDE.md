@@ -36,7 +36,7 @@ This repository now includes:
 4. Build command: `npm run build`.
 5. Output directory: `dist`.
 6. Add frontend env variable:
-   - `VITE_API_BASE_URL=https://<your-render-backend>.onrender.com`
+   - `VITE_API_URL=https://<your-render-backend>.onrender.com`
 
 The `frontend/vercel.json` rewrite ensures deep links like `/role-selection` load correctly.
 
@@ -50,7 +50,7 @@ You can use `render.yaml` blueprint to create both services.
    - `buscursor-frontend` (static site)
 3. Fill all variables marked `sync: false`.
 4. Set:
-   - `VITE_API_BASE_URL` to your Render backend URL.
+   - `VITE_API_URL` to your Render backend URL.
    - `CORS_ORIGIN` to include your Render static frontend URL and any Vercel URL.
 
 ## Post-Deploy Verification
