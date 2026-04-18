@@ -89,6 +89,11 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 // ROUTES
 // ============================================
 
+// Root test route for deployment verification
+app.get('/', (req, res) => {
+  res.status(200).send('DriveX Backend is Running 🚀');
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.status(200).json({
