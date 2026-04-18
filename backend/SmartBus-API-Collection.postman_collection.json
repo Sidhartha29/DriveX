@@ -1,0 +1,691 @@
+{
+  "info": {
+    "name": "DriveX API Collection",
+    "description": "Complete API testing collection for DriveX booking system with all 21 endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "🔐 AUTHENTICATION",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Customer Arjun\",\n  \"email\": \"customer1@drivex.com\",\n  \"password\": \"Customer@123\",\n  \"role\": \"customer\",\n  \"phone\": \"9876543213\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Register a new user (Customer, Manager, or Admin)\n\nRoles: customer, manager, admin"
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.environment.set('authToken', data.token);",
+                  "  console.log('✅ Token saved: ' + data.token.substring(0, 20) + '...');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@drivex.com\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login with email and password\n\nDemo Credentials:\n- Admin: admin@drivex.com / Admin@123\n- Manager: manager1@drivex.com / Manager@123\n- Customer: customer1@drivex.com / Customer@123"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Get current authenticated user details\n\nRequires: Valid JWT token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🚌 BUSES",
+      "item": [
+        {
+          "name": "Get All Buses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buses?from=Hyderabad&to=Bangalore&page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buses"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "Hyderabad"
+                },
+                {
+                  "key": "to",
+                  "value": "Bangalore"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get all buses with optional filters\n\nQuery Parameters:\n- from: Departure city (case-insensitive)\n- to: Arrival city (case-insensitive)\n- page: Page number (default: 1)\n- limit: Results per page (default: 10)\n\nPublic endpoint - No auth required"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Bus By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buses/{{busId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buses",
+                "{{busId}}"
+              ]
+            },
+            "description": "Get specific bus details by ID\n\nPublic endpoint - No auth required"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Seats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buses/{{busId}}/available-seats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buses",
+                "{{busId}}",
+                "available-seats"
+              ]
+            },
+            "description": "Get available seats for a bus\n\nPublic endpoint - No auth required\n\nResponse:\n- totalSeats: Total seats in bus\n- bookedSeats: Array of booked seat numbers\n- availableSeats: Array of available seat numbers\n- availableCount: Number of available seats"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking Price",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buses/{{busId}}/price?numberOfSeats=2&gstRate=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buses",
+                "{{busId}}",
+                "price"
+              ],
+              "query": [
+                {
+                  "key": "numberOfSeats",
+                  "value": "2"
+                },
+                {
+                  "key": "gstRate",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Calculate booking price for given seats\n\nFormula: Distance × PricePerKm × NumberOfSeats + (GST)%\n\nQuery Parameters:\n- numberOfSeats: Number of seats (default: 1)\n- gstRate: GST percentage (default: 5)\n\nPublic endpoint - No auth required"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Bus (Manager/Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"busName\": \"ExpressOne A1\",\n  \"operator\": \"VRL\",\n  \"busType\": \"AC Sleeper\",\n  \"from\": \"Hyderabad\",\n  \"to\": \"Bangalore\",\n  \"distance\": 570,\n  \"departureTime\": \"19:00\",\n  \"arrivalTime\": \"06:30\",\n  \"totalSeats\": 45,\n  \"pricePerKm\": 0.85,\n  \"amenities\": [\"WiFi\", \"USB Charging\", \"Blanket\", \"Pillow\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/buses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buses"
+              ]
+            },
+            "description": "Create a new bus (Manager/Admin only)\n\nOperators: APSRTC, TSRTC, VRL, Neeta Express, Paulo Travels, Kallada Travels, Ashok Travels, Orange Tours, Redbus, GoIbibo\n\nBus Types: AC Seater, AC Semi Sleeper, AC Sleeper, Non-AC\n\nRequires: Valid JWT token with Manager/Admin role"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Bus (Manager/Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pricePerKm\": 0.95,\n  \"amenities\": [\"WiFi\", \"USB Charging\", \"Blanket\", \"Pillow\", \"Water Bottle\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/buses/{{busId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buses",
+                "{{busId}}"
+              ]
+            },
+            "description": "Update bus details (Manager/Admin only)\n\nManager can only update their own buses\nAdmin can update any bus\n\nRequires: Valid JWT token with Manager/Admin role"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Bus (Admin only)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buses/{{busId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buses",
+                "{{busId}}"
+              ]
+            },
+            "description": "Delete a bus (Admin only)\n\nRequires: Valid JWT token with Admin role"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🎫 BOOKINGS",
+      "item": [
+        {
+          "name": "Create Booking (Customer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"busId\": \"{{busId}}\",\n  \"seats\": [4, 5],\n  \"passengerDetails\": [\n    {\n      \"name\": \"Passenger One\",\n      \"email\": \"passenger1@example.com\",\n      \"phone\": \"9876543220\",\n      \"age\": 28,\n      \"gender\": \"M\"\n    },\n    {\n      \"name\": \"Passenger Two\",\n      \"email\": \"passenger2@example.com\",\n      \"phone\": \"9876543221\",\n      \"age\": 26,\n      \"gender\": \"F\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings"
+              ]
+            },
+            "description": "Create a new booking (Customer only)\n\nValidations:\n- Seats must not already be booked\n- Number of seats must match passenger details\n- All passenger fields are required\n\nGenerated automatically:\n- bookingId (SB-XXXXX format)\n- QR Code\n- Total Price\n\nRequires: Valid JWT token with Customer role"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Bookings (Customer)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/my?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "my"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get all bookings for current customer\n\nPagination supported\n\nRequires: Valid JWT token with Customer role"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "{{bookingId}}"
+              ]
+            },
+            "description": "Get specific booking details\n\nCustomer can view only their bookings\nAdmin can view any booking\n\nRequires: Valid JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Bookings By Bus (Manager/Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/bus/{{busId}}?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "bus",
+                "{{busId}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get all bookings for a specific bus\n\nManager can view bookings for their buses only\nAdmin can view any bus bookings\n\nRequires: Valid JWT token with Manager/Admin role"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "{{bookingId}}",
+                "cancel"
+              ]
+            },
+            "description": "Cancel a booking\n\nCustomer can cancel their bookings\nAdmin can cancel any booking\n\nEffects:\n- Sets status to 'cancelled'\n- Releases booked seats\n- Can process refund\n\nRequires: Valid JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Payment Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentStatus\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingId}}/payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "{{bookingId}}",
+                "payment"
+              ]
+            },
+            "description": "Update booking payment status\n\nPayment Statuses: pending, completed, failed, cancelled\n\nRequires: Valid JWT token with Customer/Admin role"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👤 ADMIN",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users?role=customer&page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "customer"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get all users with optional role filtering\n\nRoles: customer, manager, admin\n\nPagination supported\n\nRequires: Valid JWT token with Admin role"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Delete a user (Admin only)\n\nCascade deletes:\n- All related buses (if manager)\n- All related bookings\n- All related drivers (if manager)\n\nRequires: Valid JWT token with Admin role"
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"manager\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}/role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}",
+                "role"
+              ]
+            },
+            "description": "Update user role\n\nRoles: customer, manager, admin\n\nRequires: Valid JWT token with Admin role"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "analytics"
+              ]
+            },
+            "description": "Get system analytics\n\nIncludes:\n- Total users by role\n- Total buses and drivers\n- Booking statistics (total, completed, cancelled, confirmed)\n- Total revenue (INR)\n\nRequires: Valid JWT token with Admin role"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/booking-analytics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "booking-analytics"
+              ]
+            },
+            "description": "Get advanced booking analytics\n\nIncludes:\n- Monthly booking trends\n- Top 10 routes by bookings\n- Top 10 routes by revenue\n\nRequires: Valid JWT token with Admin role"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Pricing",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"busId\": \"{{busId}}\",\n  \"newPrice\": 0.90\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "pricing"
+              ]
+            },
+            "description": "Update bus pricing (Admin only)\n\nUpdate pricePerKm for future bookings\n\nRequires: Valid JWT token with Admin role"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💻 SYSTEM",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Check if backend server is running\n\nNo authentication required"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "busId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
