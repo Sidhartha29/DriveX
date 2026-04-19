@@ -1,23 +1,43 @@
 import admin from 'firebase-admin'
+import logger from '../utils/logger.js'
 
 let firebaseAdminApp = null
 
 const parsePrivateKey = (value) => {
   if (!value) return undefined
-  return value.replace(/\\n/g, '\n')
+
+  let normalized = String(value).trim()
+
+  if ((normalized.startsWith('"') && normalized.endsWith('"')) || (normalized.startsWith("'") && normalized.endsWith("'"))) {
+    normalized = normalized.slice(1, -1)
+  }
+
+  return normalized
+    .replace(/\\n/g, '\n')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+}
+
+const normalizeServiceAccount = (serviceAccount) => {
+  if (!serviceAccount || typeof serviceAccount !== 'object') {
+    return null
+  }
+
+  const normalized = { ...serviceAccount }
+  if (normalized.private_key) {
+    normalized.private_key = parsePrivateKey(normalized.private_key)
+  }
+
+  return normalized
 }
 
 const parseServiceAccount = () => {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON
   if (raw) {
     try {
-      const serviceAccount = JSON.parse(raw)
-      if (serviceAccount.private_key) {
-        serviceAccount.private_key = parsePrivateKey(serviceAccount.private_key)
-      }
-      return serviceAccount
+      return normalizeServiceAccount(JSON.parse(raw))
     } catch (error) {
-      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON:', error.message)
+      logger.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON', { error: error.message })
     }
   }
 
@@ -69,7 +89,10 @@ export const initializeFirebaseAdmin = () => {
       return firebaseAdminApp
     }
   } catch (error) {
-    console.error('Failed to initialize Firebase Admin:', error.message)
+    logger.error('Failed to initialize Firebase Admin', {
+      error: error.message,
+      hint: 'Check FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_PRIVATE_KEY formatting, especially newlines in the private key'
+    })
     return null
   }
 
