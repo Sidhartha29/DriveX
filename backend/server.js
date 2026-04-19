@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import { randomUUID } from 'crypto';
 import connectDB from './config/db.js';
 import logger from './utils/logger.js';
+import { validateStartupConfig } from './utils/validateStartupConfig.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
@@ -20,6 +21,13 @@ import mockPaymentRoutes from './routes/mockPaymentRoutes.js';
 
 // Load environment variables
 dotenv.config();
+
+try {
+  validateStartupConfig();
+} catch (error) {
+  logger.error('Fatal startup misconfiguration', { error: error.message });
+  process.exit(1);
+}
 
 // Initialize Express app
 const app = express();
