@@ -5,7 +5,9 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
 import dotenv from 'dotenv';
+import { randomUUID } from 'crypto';
 import connectDB from './config/db.js';
+import logger from './utils/logger.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
@@ -108,10 +110,27 @@ const authLimiter = rateLimit({
 // GENERAL MIDDLEWARE
 // ============================================
 
-// Logging
-if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'));
-}
+// Attach a request ID so Render logs can be correlated across middleware/controllers
+app.use((req, res, next) => {
+  const incomingRequestId = String(req.headers['x-request-id'] || '').trim();
+  const requestId = incomingRequestId || randomUUID();
+  req.requestId = requestId;
+  res.setHeader('x-request-id', requestId);
+  next();
+});
+
+// Structured request logging for both local and production environments
+morgan.token('req-id', (req) => req.requestId || '-');
+const requestLogFormat =
+  'reqId=:req-id method=:method path=:url status=:status duration=:response-time ms ip=:remote-addr bytes=:res[content-length]';
+app.use(
+  morgan(requestLogFormat, {
+    skip: (req) => req.path === '/health' && process.env.LOG_HEALTH_CHECKS !== 'true',
+    stream: {
+      write: (message) => logger.info(message.trim())
+    }
+  })
+);
 
 // Body parser
 app.use(express.json({ limit: '10mb' }));
@@ -163,7 +182,13 @@ app.use((req, res) => {
 // ============================================
 
 app.use((err, req, res, next) => {
-  console.error('❌ Error:', err.message);
+  logger.error('Unhandled application error', {
+    requestId: req.requestId,
+    method: req.method,
+    path: req.originalUrl,
+    error: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
 
   // Handle Mongoose CastError (invalid ObjectId)
   if (err.name === 'CastError') {
@@ -224,18 +249,15 @@ let server;
 const startServer = (port) => {
   server = app
     .listen(port, () => {
-      console.log(`
-╔════════════════════════════════════════════╗
-║    🚌 DRIVEX BACKEND SERVER             ║
-║    http://localhost:${port}                 ║
-║    Environment: ${process.env.NODE_ENV || 'development'}             ║
-╚════════════════════════════════════════════╝
-  `);
+      logger.info('DriveX backend server started', {
+        port,
+        environment: process.env.NODE_ENV || 'development'
+      });
     })
     .on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
         const nextPort = port + 1;
-        console.warn(`⚠️ Port ${port} is already in use. Retrying on ${nextPort}...`);
+        logger.warn('Port already in use. Retrying with next port', { currentPort: port, nextPort });
         startServer(nextPort);
         return;
       }
@@ -248,7 +270,10 @@ startServer(BASE_PORT);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.error('❌ Unhandled Rejection:', err);
+  logger.error('Unhandled promise rejection', {
+    error: err?.message || String(err),
+    stack: err?.stack
+  });
   server.close(() => {
     process.exit(1);
   });
@@ -256,9 +281,9 @@ process.on('unhandledRejection', (err, promise) => {
 
 // Handle SIGTERM
 process.on('SIGTERM', () => {
-  console.log('📛 SIGTERM received. Shutting down gracefully...');
+  logger.warn('SIGTERM received. Shutting down gracefully.');
   server.close(() => {
-    console.log('✅ Server closed');
+    logger.info('Server closed');
     process.exit(0);
   });
 });

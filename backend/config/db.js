@@ -1,6 +1,27 @@
 import mongoose from 'mongoose';
+import logger from '../utils/logger.js';
 
 let retryTimer = null;
+let listenersRegistered = false;
+
+const registerMongooseListeners = () => {
+  if (listenersRegistered) {
+    return;
+  }
+
+  listenersRegistered = true;
+  mongoose.connection.on('disconnected', () => {
+    logger.warn('MongoDB disconnected');
+  });
+
+  mongoose.connection.on('reconnected', () => {
+    logger.info('MongoDB reconnected');
+  });
+
+  mongoose.connection.on('error', (error) => {
+    logger.error('MongoDB runtime error', { error: error.message });
+  });
+};
 
 const scheduleReconnect = (attempt) => {
   const delayMs = Math.min(30000, attempt * 5000);
@@ -8,7 +29,10 @@ const scheduleReconnect = (attempt) => {
     clearTimeout(retryTimer);
   }
 
-  console.log(`🔄 Retrying MongoDB connection in ${delayMs / 1000}s (attempt ${attempt})...`);
+  logger.warn('Retrying MongoDB connection', {
+    delaySeconds: delayMs / 1000,
+    attempt
+  });
   retryTimer = setTimeout(() => {
     connectDB(attempt + 1);
   }, delayMs);
@@ -16,6 +40,8 @@ const scheduleReconnect = (attempt) => {
 
 const connectDB = async (attempt = 1) => {
   try {
+    registerMongooseListeners();
+
     const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
     if (!mongoUri) {
       throw new Error('MONGO_URI or MONGODB_URI is not set');
@@ -31,11 +57,11 @@ const connectDB = async (attempt = 1) => {
       retryTimer = null;
     }
 
-    console.log(`✅ MongoDB connected: ${conn.connection.host}`);
+    logger.info('MongoDB connected', { host: conn.connection.host });
     return conn;
   } catch (error) {
-    console.error(`❌ MongoDB connection failed: ${error.message}`);
-    console.error('⚠️ Server will continue without DB. Check MongoDB Atlas IP whitelist and URI.');
+    logger.error('MongoDB connection failed', { error: error.message, attempt });
+    logger.warn('Server will continue without DB. Check MongoDB Atlas IP whitelist and URI.');
     scheduleReconnect(attempt);
     return null;
   }

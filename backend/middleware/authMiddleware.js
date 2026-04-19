@@ -19,10 +19,17 @@ export const protect = async (req, res, next) => {
       });
     }
 
+    let decoded;
     try {
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to access this route. Token invalid or expired.'
+      });
+    }
 
+    try {
       if (decoded.role === 'driver') {
         const driver = await Driver.findById(decoded.id).select('status');
         if (!driver) {
@@ -63,9 +70,9 @@ export const protect = async (req, res, next) => {
       req.user = { id: decoded.id, role: user.role };
       next();
     } catch (error) {
-      return res.status(401).json({
+      return res.status(500).json({
         success: false,
-        message: 'Not authorized to access this route. Token invalid or expired.'
+        message: 'Authentication service temporarily unavailable'
       });
     }
   } catch (error) {
