@@ -1,8 +1,10 @@
 import axios from 'axios'
 
+const apiTimeout = Number(import.meta.env.VITE_API_TIMEOUT_MS || 30000)
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://drivex-l06b.onrender.com',
-  timeout: 12000,
+  timeout: Number.isFinite(apiTimeout) && apiTimeout > 0 ? apiTimeout : 30000,
 })
 
 // Request interceptor — inject JWT token

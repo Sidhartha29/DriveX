@@ -32,6 +32,16 @@ const allowedOrigins = configuredOrigins.length
   ? configuredOrigins
   : ['http://localhost:5173', 'http://localhost:3000'];
 
+const originMatches = (origin, pattern) => {
+  if (origin === pattern) return true;
+  if (!pattern.includes('*')) return false;
+
+  // Support wildcard patterns like https://*.vercel.app
+  const escapedPattern = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+  const regexPattern = `^${escapedPattern.replace(/\*/g, '.*')}$`;
+  return new RegExp(regexPattern).test(origin);
+};
+
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow non-browser requests (no origin header)
@@ -39,7 +49,7 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.some((pattern) => originMatches(origin, pattern))) {
       return callback(null, true);
     }
 
